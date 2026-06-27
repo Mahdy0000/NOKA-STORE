@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "catalog:",
+    "@types/sql.js": "^1.4.11",
     "drizzle-kit": "^0.31.10"
   }
 }
