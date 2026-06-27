@@ -2,11 +2,11 @@
   "buildCommand": "pnpm --filter @workspace/api-server run build:vercel && pnpm --filter @workspace/noka-store run build",
   "outputDirectory": "artifacts/noka-store/dist/public",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.ts" },
+    { "source": "/api/(.*)", "destination": "/api/index.mjs" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/index.ts": {
+    "api/index.mjs": {
       "memory": 256,
       "maxDuration": 30
     }
