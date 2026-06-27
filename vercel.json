@@ -11,7 +11,4 @@
       "maxDuration": 30
     }
   },
-  "typescript": {
-    "skipTypeChecking": true
-  }
 }
