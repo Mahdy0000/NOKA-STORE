@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "HS82jcyb-hzx-xb6RePE_"
+uri = "file://noka-store-project.zip"
+type = "unspecified"
+title = "NŌKA Store — Full Project Source"

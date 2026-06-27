@@ -1,0 +1,14 @@
+{
+  "buildCommand": "cd artifacts/noka-store && npx vite build",
+  "outputDirectory": "artifacts/noka-store/dist/public",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.ts" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "memory": 256,
+      "maxDuration": 30
+    }
+  }
+}
