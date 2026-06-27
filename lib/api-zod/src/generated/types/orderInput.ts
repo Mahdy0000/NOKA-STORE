@@ -8,7 +8,7 @@
 
 export interface OrderInput {
   customerName: string;
-  customerEmail?: string;
+  customerEmail: string;
   customerPhone: string;
   address: string;
   city: string;

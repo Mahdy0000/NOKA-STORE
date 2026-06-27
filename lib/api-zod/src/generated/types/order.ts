@@ -11,7 +11,7 @@ import type { OrderStatus } from './orderStatus';
 export interface Order {
   id: number;
   customerName: string;
-  customerEmail: string | null;
+  customerEmail: string;
   customerPhone: string;
   address: string;
   city: string;

@@ -321,7 +321,7 @@ export const RemoveCartItemResponse = zod.object({
 export const ListOrdersResponseItem = zod.object({
   "id": zod.number(),
   "customerName": zod.string(),
-  "customerEmail": zod.string().nullable(),
+  "customerEmail": zod.string(),
   "customerPhone": zod.string(),
   "address": zod.string(),
   "city": zod.string(),
@@ -347,7 +347,7 @@ export const ListOrdersResponse = zod.array(ListOrdersResponseItem)
  */
 export const CreateOrderBody = zod.object({
   "customerName": zod.string(),
-  "customerEmail": zod.string().optional(),
+  "customerEmail": zod.string(),
   "customerPhone": zod.string(),
   "address": zod.string(),
   "city": zod.string(),
@@ -359,7 +359,7 @@ export const CreateOrderBody = zod.object({
 export const CreateOrderResponse = zod.object({
   "id": zod.number(),
   "customerName": zod.string(),
-  "customerEmail": zod.string().nullable(),
+  "customerEmail": zod.string(),
   "customerPhone": zod.string(),
   "address": zod.string(),
   "city": zod.string(),
@@ -389,7 +389,7 @@ export const GetOrderParams = zod.object({
 export const GetOrderResponse = zod.object({
   "id": zod.number(),
   "customerName": zod.string(),
-  "customerEmail": zod.string().optional(),
+  "customerEmail": zod.string(),
   "customerPhone": zod.string(),
   "address": zod.string(),
   "city": zod.string(),
