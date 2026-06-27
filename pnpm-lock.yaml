@@ -77,6 +77,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.45.2(@libsql/client@0.17.4)(@types/better-sqlite3@7.6.13)(@types/sql.js@1.4.11)(sql.js@1.14.1)
     devDependencies:
       prettier:
         specifier: ^3.8.4

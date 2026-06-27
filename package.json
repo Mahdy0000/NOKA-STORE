@@ -9,6 +9,9 @@
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
   "private": true,
+  "dependencies": {
+    "drizzle-orm": "catalog:"
+  },
   "devDependencies": {
     "prettier": "^3.8.4",
     "tsx": "catalog:",
