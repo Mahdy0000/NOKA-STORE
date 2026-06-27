@@ -42,8 +42,11 @@ const SCHEMA_STMTS = [
   )`,
 ];
 
-const tursoUrl = process.env["TURSO_DB_URL"];
-const tursoToken = process.env["TURSO_DB_AUTH_TOKEN"];
+const getEnv = (key: string): string | undefined =>
+  (globalThis as Record<string, any>).process?.env?.[key];
+
+const tursoUrl = getEnv("TURSO_DB_URL");
+const tursoToken = getEnv("TURSO_DB_AUTH_TOKEN");
 
 let _db: any;
 
