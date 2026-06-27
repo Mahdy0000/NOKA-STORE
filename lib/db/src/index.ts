@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/sql-js";
 import { drizzle as tursoDrizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 
 const SCHEMA_STMTS = [
   `CREATE TABLE IF NOT EXISTS categories (
@@ -65,4 +65,4 @@ if (tursoUrl) {
 
 export const db = _db;
 
-export * from "./schema";
+export * from "./schema/index.js";

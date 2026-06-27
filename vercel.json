@@ -1,5 +1,4 @@
 {
-  "framework": null,
   "buildCommand": "pnpm --filter @workspace/noka-store run build",
   "outputDirectory": "artifacts/noka-store/dist/public",
   "rewrites": [

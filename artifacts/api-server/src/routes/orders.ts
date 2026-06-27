@@ -7,7 +7,7 @@ import {
   CreateOrderBody,
   GetOrderParams,
 } from "@workspace/api-zod";
-import { appendOrderRow, readSheetRows, updateOrderStatus } from "../lib/sheets";
+import { appendOrderRow, readSheetRows, updateOrderStatus } from "../lib/sheets.js";
 
 const router = Router();
 
