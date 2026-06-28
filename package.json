@@ -13,6 +13,7 @@
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {
+    "@types/node": "^25.3.3",
     "prettier": "^3.8.4",
     "tsx": "catalog:",
     "typescript": "~5.9.3"
