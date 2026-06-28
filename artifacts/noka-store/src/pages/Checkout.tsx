@@ -20,7 +20,6 @@ interface FormData {
   address: string;
   city: string;
   governorate: string;
-  deliveryZoneId: number | "";
   notes: string;
 }
 
@@ -40,7 +39,6 @@ export default function Checkout() {
     address: "",
     city: "",
     governorate: "",
-    deliveryZoneId: "",
     notes: "",
   });
 
@@ -56,10 +54,16 @@ export default function Checkout() {
     return e;
   }
 
-  function handleChange(field: keyof FormData, value: string | number) {
+  function handleChange(field: keyof FormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
+
+  const zoneMap = new Map(deliveryZones.map((z) => [z.name, z]));
+  const selectedZone = zoneMap.get(form.governorate);
+  const subtotal = (cart?.total ?? 0) * 50;
+  const deliveryFee = selectedZone ? selectedZone.fee * 50 : 0;
+  const displayTotal = (subtotal + deliveryFee).toLocaleString("en-EG");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -79,7 +83,7 @@ export default function Checkout() {
           city: form.city,
           governorate: form.governorate,
           sessionId,
-          deliveryZoneId: form.deliveryZoneId || undefined,
+          deliveryZoneId: selectedZone?.id,
           notes: form.notes || undefined,
         },
       },
@@ -91,11 +95,6 @@ export default function Checkout() {
       }
     );
   }
-
-  const selectedZone = deliveryZones.find((z) => z.id === form.deliveryZoneId);
-  const subtotal = (cart?.total ?? 0) * 50;
-  const deliveryFee = selectedZone ? selectedZone.fee * 50 : 0;
-  const displayTotal = (subtotal + deliveryFee).toLocaleString("en-EG");
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -200,26 +199,13 @@ export default function Checkout() {
                        <p className="text-foreground font-medium whitespace-nowrap">{(item.price * item.quantity * 50).toLocaleString("en-EG")} EGP</p>
                      </div>
                    ))}
-                   <div className="border-t border-border pt-4 mt-4">
-                     <label className="block text-sm font-medium text-foreground mb-2">Delivery Zone</label>
-                     <select
-                       value={form.deliveryZoneId}
-                       onChange={(e) => handleChange("deliveryZoneId", e.target.value === "" ? "" : Number(e.target.value))}
-                       className="w-full border border-border rounded-lg px-4 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                     >
-                       <option value="">Select delivery zone</option>
-                       {deliveryZones.map((z) => (
-                         <option key={z.id} value={z.id}>{z.name} — {(z.fee * 50).toLocaleString("en-EG")} EGP</option>
-                       ))}
-                     </select>
-                   </div>
                    <div className="flex justify-between items-center text-sm">
                      <span className="text-muted-foreground">Subtotal</span>
                      <span className="text-foreground">{(cart?.total ?? 0) * 50 === 0 ? "—" : `${((cart?.total ?? 0) * 50).toLocaleString("en-EG")} EGP`}</span>
                    </div>
                    {selectedZone && (
                      <div className="flex justify-between items-center text-sm">
-                       <span className="text-muted-foreground">Delivery ({selectedZone.name})</span>
+                       <span className="text-muted-foreground">Delivery ({form.governorate})</span>
                        <span className="text-foreground">{deliveryFee.toLocaleString("en-EG")} EGP</span>
                      </div>
                    )}

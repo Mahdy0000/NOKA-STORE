@@ -108,6 +108,7 @@ export default function Admin() {
   const { data: deliveryZones = [], refetch: refetchDeliveryZones } = useListDeliveryZones();
   const [deliveryFeeInputs, setDeliveryFeeInputs] = useState<Record<string, string>>({});
   const [savingFee, setSavingFee] = useState<string | null>(null);
+  const [savedFee, setSavedFee] = useState<string | null>(null);
   const zoneMap = new Map(deliveryZones.map((z) => [z.name, z]));
   const deliveryRows = GOVERNORATES.map((name) => {
     const zone = zoneMap.get(name);
@@ -872,15 +873,19 @@ export default function Admin() {
                           if (row.id) {
                             await fetch(`/api/delivery-zones/${row.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fee }) });
                           } else {
-                            await fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: row.name, fee }) });
+                            const res = await fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: row.name, fee }) });
+                            row.id = (await res.json()).id;
                           }
                           setDeliveryFeeInputs((p) => { const n = { ...p }; delete n[row.name]; return n; });
+                          setSavedFee(row.name);
+                          setTimeout(() => setSavedFee(null), 2000);
                           refetchDeliveryZones();
                         } catch {} finally { setSavingFee(null); }
                       }}
-                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold disabled:opacity-50"
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold disabled:opacity-50 transition-colors"
+                      style={{ backgroundColor: savedFee === row.name ? "#22c55e" : undefined, color: savedFee === row.name ? "#fff" : undefined }}
                     >
-                      {savingFee === row.name ? "Saving..." : "Save"}
+                      {savingFee === row.name ? "Saving..." : savedFee === row.name ? "Saved!" : "Save"}
                     </button>
                   </div>
                 </div>
