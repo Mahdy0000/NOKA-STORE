@@ -10,7 +10,8 @@
   },
   "private": true,
   "dependencies": {
-    "drizzle-orm": "catalog:"
+    "drizzle-orm": "catalog:",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@types/node": "^25.3.3",

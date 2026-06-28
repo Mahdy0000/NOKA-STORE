@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Trash2, Package, ShoppingBag, Tags, Ruler, X, ChevronDown, Eye, Pencil, Upload
+  Plus, Trash2, Package, ShoppingBag, Tags, Ruler, Truck, X, ChevronDown, Eye, Pencil, Upload
 } from "lucide-react";
 import {
   useListProducts,
@@ -12,6 +12,10 @@ import {
   useUpdateProduct,
   getListProductsQueryKey,
   getGetStoreSummaryQueryKey,
+  useListDeliveryZones,
+  useCreateDeliveryZone,
+  useDeleteDeliveryZone,
+  getListDeliveryZonesQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -57,7 +61,7 @@ export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState(false);
-  const [tab, setTab] = useState<"products" | "categories" | "sizes" | "orders">("products");
+  const [tab, setTab] = useState<"products" | "categories" | "sizes" | "orders" | "delivery">("products");
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
   const [form, setForm] = useState<ProductFormData>(EMPTY_FORM);
@@ -94,6 +98,15 @@ export default function Admin() {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Delivery zones state
+  const { data: deliveryZones = [], refetch: refetchDeliveryZones } = useListDeliveryZones();
+  const createDeliveryZone = useCreateDeliveryZone();
+  const deleteDeliveryZone = useDeleteDeliveryZone();
+  const [showDeliveryForm, setShowDeliveryForm] = useState(false);
+  const [deliveryName, setDeliveryName] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState("");
+  const [deleteDeliveryConfirm, setDeleteDeliveryConfirm] = useState<number | null>(null);
 
   async function fetchSizes() {
     try {
@@ -341,7 +354,7 @@ export default function Admin() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-8 border-b border-border">
-          {(["products", "categories", "sizes", "orders"] as const).map((t) => (
+          {(["products", "categories", "sizes", "delivery", "orders"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -351,10 +364,10 @@ export default function Admin() {
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t === "products" ? <Package className="w-4 h-4" /> : t === "categories" ? <Tags className="w-4 h-4" /> : t === "sizes" ? <Ruler className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
+              {t === "products" ? <Package className="w-4 h-4" /> : t === "categories" ? <Tags className="w-4 h-4" /> : t === "sizes" ? <Ruler className="w-4 h-4" /> : t === "delivery" ? <Truck className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
               {t}
               <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full font-normal">
-                {t === "products" ? products.length : t === "categories" ? categories.length : t === "sizes" ? allSizes.length : orders.length}
+                {t === "products" ? products.length : t === "categories" ? categories.length : t === "sizes" ? allSizes.length : t === "delivery" ? deliveryZones.length : orders.length}
               </span>
             </button>
           ))}
@@ -811,6 +824,119 @@ export default function Admin() {
                       </div>
                     ) : (
                       <button onClick={() => setDeleteSizeConfirm(s.id)}
+                        className="p-2 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 rounded-lg hover:bg-red-50">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Delivery Zones tab */}
+        {tab === "delivery" && (
+          <div>
+            <div className="flex justify-end mb-5">
+              <button
+                onClick={() => { setShowDeliveryForm(true); setDeliveryName(""); setDeliveryFee(""); }}
+                className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm hover:shadow-md transition-shadow"
+              >
+                <Plus className="w-4 h-4" /> Add Delivery Zone
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {showDeliveryForm && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-foreground/40 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto"
+                  onClick={(e) => { if (e.target === e.currentTarget) setShowDeliveryForm(false); }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="bg-background rounded-2xl border border-border w-full max-w-sm my-8 shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                      <h2 className="text-lg font-semibold font-serif">Add Delivery Zone</h2>
+                      <button onClick={() => setShowDeliveryForm(false)} className="p-1.5 hover:bg-muted rounded-full">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <form onSubmit={async (e) => {
+                      e.preventDefault();
+                      createDeliveryZone.mutate(
+                        { data: { name: deliveryName, fee: Number(deliveryFee) } },
+                        {
+                          onSuccess: () => {
+                            setShowDeliveryForm(false);
+                            setDeliveryName("");
+                            setDeliveryFee("");
+                            refetchDeliveryZones();
+                          },
+                        }
+                      );
+                    }} className="p-6 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1.5">Zone Name *</label>
+                        <input required value={deliveryName} onChange={(e) => setDeliveryName(e.target.value)}
+                          placeholder="e.g. Cairo" className="w-full border border-border rounded-lg px-4 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1.5">Delivery Fee (EGP) *</label>
+                        <input required type="number" min="0" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)}
+                          placeholder="e.g. 50" className="w-full border border-border rounded-lg px-4 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                      </div>
+                      <div className="flex gap-3 pt-2 border-t border-border">
+                        <button type="button" onClick={() => setShowDeliveryForm(false)}
+                          className="flex-1 border border-border text-muted-foreground py-2.5 rounded-full text-sm font-medium hover:bg-muted transition-colors">Cancel</button>
+                        <button type="submit" disabled={createDeliveryZone.isPending}
+                          className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-full text-sm font-semibold disabled:opacity-50">
+                          {createDeliveryZone.isPending ? "Saving..." : "Add Zone"}
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {deliveryZones.length === 0 ? (
+              <div className="text-center py-20">
+                <Truck className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">No delivery zones yet</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {deliveryZones.map((z) => (
+                  <motion.div
+                    key={z.id}
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-sm">{z.name}</p>
+                      <p className="text-xs text-muted-foreground">{z.fee * 50} EGP delivery fee</p>
+                    </div>
+                    {deleteDeliveryConfirm === z.id ? (
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={() => {
+                          deleteDeliveryZone.mutate(z.id, {
+                            onSuccess: () => { setDeleteDeliveryConfirm(null); refetchDeliveryZones(); },
+                          });
+                        }} className="text-xs px-3 py-1.5 bg-destructive text-destructive-foreground rounded-full font-medium">Confirm</button>
+                        <button onClick={() => setDeleteDeliveryConfirm(null)} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setDeleteDeliveryConfirm(z.id)}
                         className="p-2 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 rounded-lg hover:bg-red-50">
                         <Trash2 className="w-4 h-4" />
                       </button>

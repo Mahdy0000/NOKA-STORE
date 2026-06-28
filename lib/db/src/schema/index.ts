@@ -3,3 +3,4 @@ export * from "./products.js";
 export * from "./cart.js";
 export * from "./orders.js";
 export * from "./sizes.js";
+export * from "./delivery.js";

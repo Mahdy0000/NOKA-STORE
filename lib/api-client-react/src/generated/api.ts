@@ -24,6 +24,8 @@ import type {
   CartItemInput,
   CartItemUpdate,
   Category,
+  DeliveryZone,
+  DeliveryZoneInput,
   ErrorResponse,
   GetCartParams,
   HealthStatus,
@@ -1334,9 +1336,144 @@ export function useGetStoreSummary<TData = Awaited<ReturnType<typeof getStoreSum
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getListDeliveryZonesUrl = () => {
+  return `/api/delivery-zones`
+}
+
+export const listDeliveryZones = async (options?: RequestInit): Promise<DeliveryZone[]> => {
+  return customFetch<DeliveryZone[]>(getListDeliveryZonesUrl(),
+  {
+    ...options,
+    method: 'GET'
+  }
+);}
+
+export const getListDeliveryZonesQueryKey = () => {
+    return [
+    `/api/delivery-zones`
+    ] as const;
+    }
+
+export const getListDeliveryZonesQueryOptions = <TData = Awaited<ReturnType<typeof listDeliveryZones>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeliveryZones>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDeliveryZonesQueryKey();
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDeliveryZones>>> = ({ signal }) => listDeliveryZones({ signal, ...requestOptions });
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDeliveryZones>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDeliveryZonesQueryResult = NonNullable<Awaited<ReturnType<typeof listDeliveryZones>>>
+export type ListDeliveryZonesQueryError = ErrorType<unknown>
+
+export function useListDeliveryZones<TData = Awaited<ReturnType<typeof listDeliveryZones>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeliveryZones>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDeliveryZonesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 
+export const getCreateDeliveryZoneUrl = () => {
+  return `/api/delivery-zones`
+}
+
+export const createDeliveryZone = async (data: BodyType<DeliveryZoneInput>, options?: RequestInit): Promise<DeliveryZone> => {
+  return customFetch<DeliveryZone>(getCreateDeliveryZoneUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }
+);}
+
+export const getCreateDeliveryZoneMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDeliveryZone>>, TError,{data: BodyType<DeliveryZoneInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDeliveryZone>>, TError,{data: BodyType<DeliveryZoneInput>}, TContext> => {
+
+const mutationKey = ['createDeliveryZone'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDeliveryZone>>, {data: BodyType<DeliveryZoneInput>}> = (props) => {
+    const {data} = props ?? {};
+
+    return  createDeliveryZone(data,requestOptions)
+  }
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDeliveryZoneMutationResult = NonNullable<Awaited<ReturnType<typeof createDeliveryZone>>>
+    export type CreateDeliveryZoneMutationBody = BodyType<DeliveryZoneInput>
+    export type CreateDeliveryZoneMutationError = ErrorType<unknown>
+
+export const useCreateDeliveryZone = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDeliveryZone>>, TError,{data: BodyType<DeliveryZoneInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDeliveryZone>>,
+        TError,
+        {data: BodyType<DeliveryZoneInput>},
+        TContext
+      > => {
+      return useMutation(getCreateDeliveryZoneMutationOptions(options));
+    }
 
 
+export const getDeleteDeliveryZoneUrl = (id: number,) => {
+  return `/api/delivery-zones/${id}`
+}
+
+export const deleteDeliveryZone = async (id: number, options?: RequestInit): Promise<void> => {
+  return customFetch<void>(getDeleteDeliveryZoneUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+  }
+);}
+
+export const getDeleteDeliveryZoneMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDeliveryZone>>, TError, number, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDeliveryZone>>, TError, number, TContext> => {
+
+const mutationKey = ['deleteDeliveryZone'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDeliveryZone>>, number> = (props) => {
+    const id = props ?? 0;
+
+    return  deleteDeliveryZone(id,requestOptions)
+  }
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDeliveryZoneMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDeliveryZone>>>
+    export type DeleteDeliveryZoneMutationError = ErrorType<unknown>
+
+export const useDeleteDeliveryZone = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDeliveryZone>>, TError, number, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDeliveryZone>>,
+        TError,
+        number,
+        TContext
+      > => {
+      return useMutation(getDeleteDeliveryZoneMutationOptions(options));
+    }
 
 

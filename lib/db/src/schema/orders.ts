@@ -11,6 +11,8 @@ export const ordersTable = sqliteTable("orders", {
   city: text("city").notNull(),
   governorate: text("governorate").notNull(),
   total: real("total").notNull(),
+  deliveryFee: real("delivery_fee").notNull().default(0),
+  deliveryZone: text("delivery_zone"),
   status: text("status").notNull().default("pending"),
   notes: text("notes"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().defaultNow(),

@@ -316,6 +316,61 @@ export const RemoveCartItemResponse = zod.object({
 
 
 /**
+ * @summary List all delivery zones
+ */
+export const ListDeliveryZonesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "fee": zod.number()
+})
+export const ListDeliveryZonesResponse = zod.array(ListDeliveryZonesResponseItem)
+
+
+/**
+ * @summary Create a delivery zone
+ */
+export const CreateDeliveryZoneBody = zod.object({
+  "name": zod.string(),
+  "fee": zod.number()
+})
+
+export const CreateDeliveryZoneResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "fee": zod.number()
+})
+
+
+/**
+ * @summary Update a delivery zone
+ */
+export const UpdateDeliveryZoneParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateDeliveryZoneBody = zod.object({
+  "name": zod.string().optional(),
+  "fee": zod.number().optional()
+})
+
+export const UpdateDeliveryZoneResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "fee": zod.number()
+})
+
+
+/**
+ * @summary Delete a delivery zone
+ */
+export const DeleteDeliveryZoneParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteDeliveryZoneResponse = zod.void()
+
+
+/**
  * @summary List all orders
  */
 export const ListOrdersResponseItem = zod.object({
@@ -327,6 +382,8 @@ export const ListOrdersResponseItem = zod.object({
   "city": zod.string(),
   "governorate": zod.string(),
   "total": zod.number(),
+  "deliveryFee": zod.number(),
+  "deliveryZone": zod.string().nullish(),
   "status": zod.enum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']),
   "items": zod.array(zod.object({
   "id": zod.number(),
@@ -353,6 +410,7 @@ export const CreateOrderBody = zod.object({
   "city": zod.string(),
   "governorate": zod.string(),
   "sessionId": zod.string(),
+  "deliveryZoneId": zod.number().optional(),
   "notes": zod.string().optional()
 })
 
@@ -365,6 +423,8 @@ export const CreateOrderResponse = zod.object({
   "city": zod.string(),
   "governorate": zod.string(),
   "total": zod.number(),
+  "deliveryFee": zod.number(),
+  "deliveryZone": zod.string().nullish(),
   "status": zod.enum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']),
   "items": zod.array(zod.object({
   "id": zod.number(),
@@ -395,6 +455,8 @@ export const GetOrderResponse = zod.object({
   "city": zod.string(),
   "governorate": zod.string(),
   "total": zod.number(),
+  "deliveryFee": zod.number(),
+  "deliveryZone": zod.string().nullish(),
   "status": zod.enum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']),
   "items": zod.array(zod.object({
   "id": zod.number(),

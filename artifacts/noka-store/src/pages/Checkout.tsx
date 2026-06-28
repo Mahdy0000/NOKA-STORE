@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { motion } from "framer-motion";
-import { useGetCart, useCreateOrder, getGetCartQueryKey } from "@workspace/api-client-react";
+import { useGetCart, useCreateOrder, useListDeliveryZones, getGetCartQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/hooks/useSession";
 
@@ -20,6 +20,7 @@ interface FormData {
   address: string;
   city: string;
   governorate: string;
+  deliveryZoneId: number | "";
   notes: string;
 }
 
@@ -29,6 +30,7 @@ export default function Checkout() {
   const queryClient = useQueryClient();
 
   const { data: cart } = useGetCart({ session_id: sessionId });
+  const { data: deliveryZones = [] } = useListDeliveryZones();
   const createOrder = useCreateOrder();
 
   const [form, setForm] = useState<FormData>({
@@ -38,6 +40,7 @@ export default function Checkout() {
     address: "",
     city: "",
     governorate: "",
+    deliveryZoneId: "",
     notes: "",
   });
 
@@ -53,7 +56,7 @@ export default function Checkout() {
     return e;
   }
 
-  function handleChange(field: keyof FormData, value: string) {
+  function handleChange(field: keyof FormData, value: string | number) {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
@@ -76,6 +79,7 @@ export default function Checkout() {
           city: form.city,
           governorate: form.governorate,
           sessionId,
+          deliveryZoneId: form.deliveryZoneId || undefined,
           notes: form.notes || undefined,
         },
       },
@@ -88,7 +92,10 @@ export default function Checkout() {
     );
   }
 
-  const displayTotal = ((cart?.total ?? 0) * 50).toLocaleString("en-EG");
+  const selectedZone = deliveryZones.find((z) => z.id === form.deliveryZoneId);
+  const subtotal = (cart?.total ?? 0) * 50;
+  const deliveryFee = selectedZone ? selectedZone.fee * 50 : 0;
+  const displayTotal = (subtotal + deliveryFee).toLocaleString("en-EG");
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -184,19 +191,42 @@ export default function Checkout() {
                   <h2 className="text-lg font-semibold mb-5 font-serif">Order Summary</h2>
                   {cart?.items.map((item) => (
                     <div key={item.id} className="flex justify-between items-start py-2 border-b border-border last:border-0 text-sm">
-                      <div className="flex-1 min-w-0 pr-4">
-                        <p className="font-medium text-foreground truncate">{item.productName}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {[item.size, item.color].filter(Boolean).join(" / ")} &times; {item.quantity}
-                        </p>
-                      </div>
-                      <p className="text-foreground font-medium whitespace-nowrap">{(item.price * item.quantity * 50).toLocaleString("en-EG")} EGP</p>
-                    </div>
-                  ))}
-                  <div className="border-t border-border pt-4 mt-4 flex justify-between items-center">
-                    <span className="font-semibold text-foreground">Total</span>
-                    <span className="text-xl font-bold text-primary">{displayTotal} EGP</span>
-                  </div>
+                    <div className="flex-1 min-w-0 pr-4">
+                         <p className="font-medium text-foreground truncate">{item.productName}</p>
+                         <p className="text-muted-foreground text-xs">
+                           {[item.size, item.color].filter(Boolean).join(" / ")} &times; {item.quantity}
+                         </p>
+                       </div>
+                       <p className="text-foreground font-medium whitespace-nowrap">{(item.price * item.quantity * 50).toLocaleString("en-EG")} EGP</p>
+                     </div>
+                   ))}
+                   <div className="border-t border-border pt-4 mt-4">
+                     <label className="block text-sm font-medium text-foreground mb-2">Delivery Zone</label>
+                     <select
+                       value={form.deliveryZoneId}
+                       onChange={(e) => handleChange("deliveryZoneId", e.target.value === "" ? "" : Number(e.target.value))}
+                       className="w-full border border-border rounded-lg px-4 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                     >
+                       <option value="">Select delivery zone</option>
+                       {deliveryZones.map((z) => (
+                         <option key={z.id} value={z.id}>{z.name} — {(z.fee * 50).toLocaleString("en-EG")} EGP</option>
+                       ))}
+                     </select>
+                   </div>
+                   <div className="flex justify-between items-center text-sm">
+                     <span className="text-muted-foreground">Subtotal</span>
+                     <span className="text-foreground">{(cart?.total ?? 0) * 50 === 0 ? "—" : `${((cart?.total ?? 0) * 50).toLocaleString("en-EG")} EGP`}</span>
+                   </div>
+                   {selectedZone && (
+                     <div className="flex justify-between items-center text-sm">
+                       <span className="text-muted-foreground">Delivery ({selectedZone.name})</span>
+                       <span className="text-foreground">{deliveryFee.toLocaleString("en-EG")} EGP</span>
+                     </div>
+                   )}
+                   <div className="border-t border-border pt-4 mt-4 flex justify-between items-center">
+                     <span className="font-semibold text-foreground">Total</span>
+                     <span className="text-xl font-bold text-primary">{displayTotal} EGP</span>
+                   </div>
                   <p className="text-xs text-muted-foreground mt-2 mb-6">Cash on delivery available</p>
 
                   <motion.button

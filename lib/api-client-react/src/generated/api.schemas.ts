@@ -135,6 +135,8 @@ export interface Order {
   city: string;
   governorate: string;
   total: number;
+  deliveryFee: number;
+  deliveryZone?: string | null;
   status: OrderStatus;
   items: OrderItem[];
   createdAt: string;
@@ -148,7 +150,19 @@ export interface OrderInput {
   city: string;
   governorate: string;
   sessionId: string;
+  deliveryZoneId?: number;
   notes?: string;
+}
+
+export interface DeliveryZone {
+  id: number;
+  name: string;
+  fee: number;
+}
+
+export interface DeliveryZoneInput {
+  name: string;
+  fee: number;
 }
 
 export interface StoreSummary {

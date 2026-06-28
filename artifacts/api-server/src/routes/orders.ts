@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { ordersTable, orderItemsTable, cartItemsTable, productsTable } from "@workspace/db";
+import { ordersTable, orderItemsTable, cartItemsTable, productsTable, deliveryZonesTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
@@ -26,6 +26,8 @@ async function getOrderWithItems(orderId: number) {
     city: order[0].city,
     governorate: order[0].governorate,
     total: Number(order[0].total),
+    deliveryFee: Number(order[0].deliveryFee ?? 0),
+    deliveryZone: order[0].deliveryZone ?? null,
     status: order[0].status,
     items: items.map((i) => ({
       id: i.id,
@@ -80,7 +82,20 @@ router.post("/orders", async (req, res) => {
       })
     );
 
-    const total = enriched.reduce((sum, { item, product }) => sum + Number(product?.price ?? 0) * item.quantity, 0);
+    const subtotal = enriched.reduce((sum, { item, product }) => sum + Number(product?.price ?? 0) * item.quantity, 0);
+
+    // Look up delivery fee
+    let deliveryFee = 0;
+    let deliveryZoneName = null;
+    if (data.deliveryZoneId) {
+      const [zone] = await db.select().from(deliveryZonesTable).where(eq(deliveryZonesTable.id, data.deliveryZoneId)).limit(1);
+      if (zone) {
+        deliveryFee = Number(zone.fee);
+        deliveryZoneName = zone.name;
+      }
+    }
+
+    const total = subtotal + deliveryFee;
 
     const [order] = await db
       .insert(ordersTable)
@@ -92,6 +107,8 @@ router.post("/orders", async (req, res) => {
         city: data.city,
         governorate: data.governorate,
         total,
+        deliveryFee,
+        deliveryZone: deliveryZoneName,
         status: "pending",
         notes: data.notes,
       })
@@ -135,6 +152,7 @@ router.post("/orders", async (req, res) => {
             City: result.city,
             Governorate: result.governorate,
             Items: itemsStr,
+            "Delivery Fee": result.deliveryFee * 50,
             "Total (EGP)": result.total * 50,
           });
         } catch (e) {
