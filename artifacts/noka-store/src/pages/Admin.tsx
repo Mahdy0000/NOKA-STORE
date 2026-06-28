@@ -31,7 +31,7 @@ interface ProductFormData {
   name: string;
   description: string;
   price: string;
-  imageUrl: string;
+  imageUrls: string[];
   categoryId: string;
   sizes: string[];
   colors: string;
@@ -44,7 +44,7 @@ const EMPTY_FORM: ProductFormData = {
   name: "",
   description: "",
   price: "",
-  imageUrl: "",
+  imageUrls: [],
   categoryId: "",
   sizes: [],
   colors: "",
@@ -130,7 +130,8 @@ export default function Admin() {
       name: form.name,
       description: form.description,
       price: Number(form.price) / 50,
-      imageUrl: form.imageUrl || undefined,
+      imageUrl: form.imageUrls[0] || undefined,
+      images: form.imageUrls.slice(1),
       categoryId: form.categoryId ? Number(form.categoryId) : undefined,
       sizes: form.sizes,
       colors,
@@ -201,8 +202,12 @@ export default function Admin() {
       fd.append("image", file);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const data = await res.json();
-      if (data.url) setForm((p) => ({ ...p, imageUrl: data.url }));
+      if (data.url) setForm((p) => ({ ...p, imageUrls: [...p.imageUrls, data.url] }));
     } catch {} finally { setUploading(false); }
+  }
+
+  function removeImage(idx: number) {
+    setForm((p) => ({ ...p, imageUrls: p.imageUrls.filter((_, i) => i !== idx) }));
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -420,35 +425,43 @@ export default function Admin() {
                         </div>
 
                         <div className="sm:col-span-2">
-                          <label className="block text-sm font-medium mb-1.5">Image</label>
-                          <div
-                            onDrop={handleDrop}
-                            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                            onDragLeave={() => setDragOver(false)}
-                            onClick={() => fileInputRef.current?.click()}
-                            className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
-                          >
-                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-                            {uploading ? (
-                              <div className="flex flex-col items-center gap-2">
-                                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                <span className="text-sm text-muted-foreground">Uploading...</span>
-                              </div>
-                            ) : form.imageUrl ? (
-                              <div className="flex items-center gap-3">
-                                <img src={form.imageUrl} alt="preview" className="w-16 h-16 object-cover rounded-lg border" />
-                                <div className="text-left flex-1 min-w-0">
-                                  <p className="text-sm text-muted-foreground truncate">{form.imageUrl}</p>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setForm((p) => ({ ...p, imageUrl: "" })); }} className="text-xs text-destructive hover:underline mt-1">Remove</button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex flex-col items-center gap-2">
-                                <Upload className="w-8 h-8 text-muted-foreground/50" />
-                                <p className="text-sm text-muted-foreground"><span className="text-primary font-medium">Click to browse</span> or drag & drop</p>
-                                <p className="text-xs text-muted-foreground/60">JPG, PNG, WebP up to 10MB</p>
+                          <label className="block text-sm font-medium mb-1.5">Images</label>
+                          <div className="space-y-3">
+                            {form.imageUrls.length > 0 && (
+                              <div className="flex flex-wrap gap-3">
+                                {form.imageUrls.map((url, i) => (
+                                  <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
+                                    <img src={url} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
+                                    <button type="button" onClick={() => removeImage(i)}
+                                      className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs">
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                    {i === 0 && <span className="absolute bottom-1 left-1 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded font-medium">Main</span>}
+                                  </div>
+                                ))}
                               </div>
                             )}
+                            <div
+                              onDrop={handleDrop}
+                              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                              onDragLeave={() => setDragOver(false)}
+                              onClick={() => fileInputRef.current?.click()}
+                              className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                            >
+                              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                              {uploading ? (
+                                <div className="flex flex-col items-center gap-2">
+                                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                  <span className="text-sm text-muted-foreground">Uploading...</span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                  <Upload className="w-8 h-8 text-muted-foreground/50" />
+                                  <p className="text-sm text-muted-foreground"><span className="text-primary font-medium">Click to browse</span> or drag & drop</p>
+                                  <p className="text-xs text-muted-foreground/60">JPG, PNG, WebP up to 10MB</p>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -546,12 +559,13 @@ export default function Admin() {
 
                     <button
                       onClick={() => {
+                        const imgs = [product.imageUrl, ...(product.images ?? [])].filter(Boolean) as string[];
                         setEditingProduct(product.id);
                         setForm({
                           name: product.name,
                           description: product.description ?? "",
                           price: String(product.price * 50),
-                          imageUrl: product.imageUrl ?? "",
+                          imageUrls: imgs,
                           categoryId: product.categoryId?.toString() ?? "",
                           sizes: product.sizes,
                           colors: product.colors.join(", "),
