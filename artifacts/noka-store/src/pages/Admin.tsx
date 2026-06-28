@@ -13,6 +13,7 @@ import {
   getListProductsQueryKey,
   getGetStoreSummaryQueryKey,
   useListDeliveryZones,
+  getListDeliveryZonesQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -876,16 +877,20 @@ export default function Admin() {
                         const fee = Number(deliveryFeeInputs[row.name]) / 50;
                         try {
                           if (row.id) {
-                            await fetch(`/api/delivery-zones/${row.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fee }) });
+                            const r = await fetch(`/api/delivery-zones/${row.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fee }) });
+                            if (!r.ok) throw new Error("Save failed");
                           } else {
-                            const res = await fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: row.name, fee }) });
-                            row.id = (await res.json()).id;
+                            const r = await fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: row.name, fee }) });
+                            if (!r.ok) throw new Error("Create failed");
+                            row.id = (await r.json()).id;
                           }
                           setDeliveryFeeInputs((p) => { const n = { ...p }; delete n[row.name]; return n; });
+                          await queryClient.invalidateQueries({ queryKey: getListDeliveryZonesQueryKey() });
                           setSavedFee(row.name);
                           setTimeout(() => setSavedFee(null), 2000);
-                          refetchDeliveryZones();
-                        } catch {} finally { setSavingFee(null); }
+                        } catch (err) {
+                          alert("Failed to save delivery fee");
+                        } finally { setSavingFee(null); }
                       }}
                       className="px-3 py-1.5 rounded-full text-xs font-semibold disabled:opacity-50 transition-colors"
                       style={{ backgroundColor: savedFee === row.name ? "#22c55e" : undefined, color: savedFee === row.name ? "#fff" : undefined }}
