@@ -209,9 +209,6 @@ export default function Home() {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl font-serif font-bold mb-4">Wear your comfort</h2>
-            <p className="text-primary-foreground/80 mb-8 text-lg">
-              Free shipping on orders above 500 EGP. Delivering across all Egyptian governorates.
-            </p>
             <Link href="/shop">
               <motion.button
                 whileHover={{ scale: 1.03 }}

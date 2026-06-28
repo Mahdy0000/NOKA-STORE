@@ -231,9 +231,6 @@ export default function Product() {
               </button>
             )}
 
-            <p className="text-xs text-muted-foreground mt-4 text-center">
-              Free shipping on orders above 500 EGP
-            </p>
           </motion.div>
         </div>
 
