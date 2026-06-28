@@ -854,21 +854,26 @@ export default function Admin() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground text-sm">{row.name}</p>
                   </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs text-muted-foreground">Current</p>
+                    <p className="font-semibold text-foreground text-sm">{(row.fee * 50).toLocaleString("en-EG")} EGP</p>
+                  </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <div className="relative">
                       <input
                         type="number" min="0"
-                        value={deliveryFeeInputs[row.name] ?? String(row.fee * 50)}
+                        placeholder={(row.fee * 50).toLocaleString("en-EG")}
+                        value={deliveryFeeInputs[row.name] ?? ""}
                         onChange={(e) => setDeliveryFeeInputs((p) => ({ ...p, [row.name]: e.target.value }))}
                         className="w-24 border border-border rounded-lg px-3 py-1.5 text-sm bg-background text-right focus:outline-none focus:ring-2 focus:ring-primary/30"
                       />
                       <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">EGP</span>
                     </div>
                     <button
-                      disabled={savingFee === row.name}
+                      disabled={savingFee === row.name || !deliveryFeeInputs[row.name]}
                       onClick={async () => {
                         setSavingFee(row.name);
-                        const fee = Number(deliveryFeeInputs[row.name] ?? row.fee * 50) / 50;
+                        const fee = Number(deliveryFeeInputs[row.name]) / 50;
                         try {
                           if (row.id) {
                             await fetch(`/api/delivery-zones/${row.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fee }) });

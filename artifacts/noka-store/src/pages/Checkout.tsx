@@ -203,12 +203,10 @@ export default function Checkout() {
                      <span className="text-muted-foreground">Subtotal</span>
                      <span className="text-foreground">{(cart?.total ?? 0) * 50 === 0 ? "—" : `${((cart?.total ?? 0) * 50).toLocaleString("en-EG")} EGP`}</span>
                    </div>
-                   {selectedZone && (
-                     <div className="flex justify-between items-center text-sm">
-                       <span className="text-muted-foreground">Delivery ({form.governorate})</span>
-                       <span className="text-foreground">{deliveryFee.toLocaleString("en-EG")} EGP</span>
-                     </div>
-                   )}
+                   <div className="flex justify-between items-center text-sm">
+                     <span className="text-muted-foreground">Delivery{form.governorate ? ` (${form.governorate})` : ""}</span>
+                     <span className="text-foreground">{form.governorate ? `${deliveryFee.toLocaleString("en-EG")} EGP` : "—"}</span>
+                   </div>
                    <div className="border-t border-border pt-4 mt-4 flex justify-between items-center">
                      <span className="font-semibold text-foreground">Total</span>
                      <span className="text-xl font-bold text-primary">{displayTotal} EGP</span>
