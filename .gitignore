@@ -56,3 +56,6 @@ Thumbs.db
 .env.local
 .env.production
 .vercel
+
+# Local SQLite databases
+*.db
