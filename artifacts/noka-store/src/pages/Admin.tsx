@@ -171,6 +171,10 @@ export default function Admin() {
             setEditingProduct(null);
             setForm(EMPTY_FORM);
           },
+          onError: (err: any) => {
+            const msg = err?.message ? (() => { try { const j = JSON.parse(err.message); return j.error || JSON.stringify(j); } catch { return err.message; } })() : "Unknown error";
+            alert("Save failed: " + msg);
+          },
         }
       );
     } else {
