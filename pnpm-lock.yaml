@@ -94,6 +94,9 @@ importers:
 
   artifacts/api-server:
     dependencies:
+      '@libsql/client':
+        specifier: ^0.17.4
+        version: 0.17.4
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
@@ -109,6 +112,9 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@libsql/client@0.17.4)(@types/better-sqlite3@7.6.13)(@types/sql.js@1.4.11)(sql.js@1.14.1)
+      drizzle-zod:
+        specifier: ^0.8.3
+        version: 0.8.3(drizzle-orm@0.45.2(@libsql/client@0.17.4)(@types/better-sqlite3@7.6.13)(@types/sql.js@1.4.11)(sql.js@1.14.1))(zod@3.25.76)
       express:
         specifier: ^5.2.1
         version: 5.2.1
@@ -121,6 +127,9 @@ importers:
       pino-http:
         specifier: ^10.5.0
         version: 10.5.0
+      sql.js:
+        specifier: ^1.11.0
+        version: 1.14.1
       zod:
         specifier: 'catalog:'
         version: 3.25.76
