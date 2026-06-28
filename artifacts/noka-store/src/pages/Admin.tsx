@@ -13,9 +13,6 @@ import {
   getListProductsQueryKey,
   getGetStoreSummaryQueryKey,
   useListDeliveryZones,
-  useCreateDeliveryZone,
-  useDeleteDeliveryZone,
-  getListDeliveryZonesQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -30,6 +27,14 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const ORDER_STATUSES = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+
+const GOVERNORATES = [
+  "Cairo", "Giza", "Alexandria", "Dakahlia", "Red Sea", "Beheira", "Fayoum",
+  "Gharbia", "Ismailia", "Menofia", "Minya", "Qaliubiya", "New Valley", "Suez",
+  "Aswan", "Assiut", "Beni Suef", "Port Said", "Damietta", "Sharkia",
+  "South Sinai", "Kafr El Sheikh", "Matruh", "Luxor", "Qena",
+  "North Sinai", "Sohag",
+];
 
 interface ProductFormData {
   name: string;
@@ -101,12 +106,18 @@ export default function Admin() {
 
   // Delivery zones state
   const { data: deliveryZones = [], refetch: refetchDeliveryZones } = useListDeliveryZones();
-  const createDeliveryZone = useCreateDeliveryZone();
-  const deleteDeliveryZone = useDeleteDeliveryZone();
-  const [showDeliveryForm, setShowDeliveryForm] = useState(false);
-  const [deliveryName, setDeliveryName] = useState("");
-  const [deliveryFee, setDeliveryFee] = useState("");
-  const [deleteDeliveryConfirm, setDeleteDeliveryConfirm] = useState<number | null>(null);
+  const [deliveryFeeInputs, setDeliveryFeeInputs] = useState<Record<number, string>>({});
+  const [savingFee, setSavingFee] = useState<number | null>(null);
+
+  // Auto-create missing governorates on mount
+  useEffect(() => {
+    if (!deliveryZones.length) return;
+    const existing = new Set(deliveryZones.map((z) => z.name));
+    const missing = GOVERNORATES.filter((g) => !existing.has(g));
+    if (!missing.length) return;
+    Promise.all(missing.map((name) => fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, fee: 0 }) })))
+      .then(() => refetchDeliveryZones());
+  }, [deliveryZones.length]);
 
   async function fetchSizes() {
     try {
@@ -838,113 +849,43 @@ export default function Admin() {
         {/* Delivery Zones tab */}
         {tab === "delivery" && (
           <div>
-            <div className="flex justify-end mb-5">
-              <button
-                onClick={() => { setShowDeliveryForm(true); setDeliveryName(""); setDeliveryFee(""); }}
-                className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-semibold shadow-sm hover:shadow-md transition-shadow"
-              >
-                <Plus className="w-4 h-4" /> Add Delivery Zone
-              </button>
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-lg font-semibold font-serif">Delivery Fees by Governorate</h2>
             </div>
-
-            <AnimatePresence>
-              {showDeliveryForm && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-foreground/40 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto"
-                  onClick={(e) => { if (e.target === e.currentTarget) setShowDeliveryForm(false); }}
-                >
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    className="bg-background rounded-2xl border border-border w-full max-w-sm my-8 shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-                      <h2 className="text-lg font-semibold font-serif">Add Delivery Zone</h2>
-                      <button onClick={() => setShowDeliveryForm(false)} className="p-1.5 hover:bg-muted rounded-full">
-                        <X className="w-4 h-4" />
-                      </button>
+            <div className="space-y-2">
+              {deliveryZones.sort((a, b) => a.name.localeCompare(b.name)).map((z) => (
+                <div key={z.id} className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground text-sm">{z.name}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="relative">
+                      <input
+                        type="number" min="0"
+                        value={deliveryFeeInputs[z.id] ?? String(z.fee * 50)}
+                        onChange={(e) => setDeliveryFeeInputs((p) => ({ ...p, [z.id]: e.target.value }))}
+                        className="w-24 border border-border rounded-lg px-3 py-1.5 text-sm bg-background text-right focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                      <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">EGP</span>
                     </div>
-                    <form onSubmit={async (e) => {
-                      e.preventDefault();
-                      createDeliveryZone.mutate(
-                        { data: { name: deliveryName, fee: Number(deliveryFee) } },
-                        {
-                          onSuccess: () => {
-                            setShowDeliveryForm(false);
-                            setDeliveryName("");
-                            setDeliveryFee("");
-                            refetchDeliveryZones();
-                          },
-                        }
-                      );
-                    }} className="p-6 space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1.5">Zone Name *</label>
-                        <input required value={deliveryName} onChange={(e) => setDeliveryName(e.target.value)}
-                          placeholder="e.g. Cairo" className="w-full border border-border rounded-lg px-4 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1.5">Delivery Fee (EGP) *</label>
-                        <input required type="number" min="0" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)}
-                          placeholder="e.g. 50" className="w-full border border-border rounded-lg px-4 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                      </div>
-                      <div className="flex gap-3 pt-2 border-t border-border">
-                        <button type="button" onClick={() => setShowDeliveryForm(false)}
-                          className="flex-1 border border-border text-muted-foreground py-2.5 rounded-full text-sm font-medium hover:bg-muted transition-colors">Cancel</button>
-                        <button type="submit" disabled={createDeliveryZone.isPending}
-                          className="flex-1 bg-primary text-primary-foreground py-2.5 rounded-full text-sm font-semibold disabled:opacity-50">
-                          {createDeliveryZone.isPending ? "Saving..." : "Add Zone"}
-                        </button>
-                      </div>
-                    </form>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {deliveryZones.length === 0 ? (
-              <div className="text-center py-20">
-                <Truck className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">No delivery zones yet</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {deliveryZones.map((z) => (
-                  <motion.div
-                    key={z.id}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground text-sm">{z.name}</p>
-                      <p className="text-xs text-muted-foreground">{z.fee * 50} EGP delivery fee</p>
-                    </div>
-                    {deleteDeliveryConfirm === z.id ? (
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button onClick={() => {
-                          deleteDeliveryZone.mutate(z.id, {
-                            onSuccess: () => { setDeleteDeliveryConfirm(null); refetchDeliveryZones(); },
-                          });
-                        }} className="text-xs px-3 py-1.5 bg-destructive text-destructive-foreground rounded-full font-medium">Confirm</button>
-                        <button onClick={() => setDeleteDeliveryConfirm(null)} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
-                      </div>
-                    ) : (
-                      <button onClick={() => setDeleteDeliveryConfirm(z.id)}
-                        className="p-2 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 rounded-lg hover:bg-red-50">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-            )}
+                    <button
+                      disabled={savingFee === z.id}
+                      onClick={async () => {
+                        setSavingFee(z.id);
+                        try {
+                          await fetch(`/api/delivery-zones/${z.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fee: Number(deliveryFeeInputs[z.id] ?? z.fee * 50) / 50 }) });
+                          setDeliveryFeeInputs((p) => { const n = { ...p }; delete n[z.id]; return n; });
+                          refetchDeliveryZones();
+                        } catch {} finally { setSavingFee(null); }
+                      }}
+                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold disabled:opacity-50"
+                    >
+                      {savingFee === z.id ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
