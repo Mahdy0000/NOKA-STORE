@@ -4,7 +4,6 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import {
   useGetCart,
   useUpdateCartItem,
-  useRemoveCartItem,
   getGetCartQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,7 +29,8 @@ export default function Cart() {
   }
 
   function handleRemove(itemId: number) {
-    removeItem.mutate({ itemId }, { onSuccess: invalidateCart });
+    fetch(`/api/cart/items/${itemId}?session_id=${sessionId}`, { method: "DELETE" })
+      .then(() => invalidateCart());
   }
 
   const displayTotal = ((cart?.total ?? 0) * 50).toLocaleString("en-EG");

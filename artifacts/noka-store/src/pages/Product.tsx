@@ -37,12 +37,13 @@ export default function Product() {
 
   function handleAddToCart() {
     if (!product) return;
+    if (product.sizes.length > 0 && !selectedSize) return;
     addToCart.mutate(
       {
         data: {
           productId: product.id,
           quantity: 1,
-          size: selectedSize || undefined,
+          size: selectedSize,
           color: selectedColor || undefined,
           sessionId,
         },
@@ -203,12 +204,14 @@ export default function Product() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddToCart}
-                disabled={addToCart.isPending}
+                disabled={addToCart.isPending || (product.sizes.length > 0 && !selectedSize)}
                 className={`flex items-center justify-center gap-3 w-full py-4 rounded-full font-semibold tracking-wide text-sm transition-all shadow-md ${
-                  added
-                    ? "bg-green-600 text-white"
-                    : "bg-primary text-primary-foreground hover:shadow-lg"
-                }`}
+                   added
+                     ? "bg-green-600 text-white"
+                     : addToCart.isPending || (product.sizes.length > 0 && !selectedSize)
+                     ? "bg-muted text-muted-foreground cursor-not-allowed"
+                     : "bg-primary text-primary-foreground hover:shadow-lg"
+                 }`}
               >
                 {added ? (
                   <>
