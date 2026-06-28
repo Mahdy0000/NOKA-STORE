@@ -105,19 +105,19 @@ export default function Admin() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Delivery zones state
-  const { data: deliveryZones = [], refetch: refetchDeliveryZones } = useListDeliveryZones();
+  const { data: deliveryZones = [], refetch: refetchDeliveryZones, isFetched: deliveryFetched } = useListDeliveryZones();
   const [deliveryFeeInputs, setDeliveryFeeInputs] = useState<Record<number, string>>({});
   const [savingFee, setSavingFee] = useState<number | null>(null);
 
   // Auto-create missing governorates on mount
   useEffect(() => {
-    if (!deliveryZones.length) return;
+    if (!deliveryFetched) return;
     const existing = new Set(deliveryZones.map((z) => z.name));
     const missing = GOVERNORATES.filter((g) => !existing.has(g));
     if (!missing.length) return;
     Promise.all(missing.map((name) => fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, fee: 0 }) })))
       .then(() => refetchDeliveryZones());
-  }, [deliveryZones.length]);
+  }, [deliveryFetched]);
 
   async function fetchSizes() {
     try {
