@@ -40,6 +40,10 @@ const SCHEMA_STMTS = [
   `CREATE TABLE IF NOT EXISTS sizes (
     id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE
   )`,
+  `CREATE TABLE IF NOT EXISTS delivery_zones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
+    fee REAL NOT NULL
+  )`,
 ];
 
 const tursoUrl = process.env["TURSO_DB_URL"];

@@ -894,7 +894,11 @@ export default function Admin() {
                           setTimeout(() => setSavedFee(null), 2000);
                         } catch (err) {
                           console.error(err);
-                          alert("Failed: " + (err instanceof Error ? err.message : "Unknown"));
+                          let msg = "Unknown error";
+                          if (err instanceof Error) {
+                            try { const j = JSON.parse(err.message); msg = j.details ? JSON.stringify(j.details) : j.error || err.message; } catch { msg = err.message; }
+                          }
+                          alert("Failed: " + msg);
                         } finally { setSavingFee(null); }
                       }}
                       className="px-3 py-1.5 rounded-full text-xs font-semibold disabled:opacity-50 transition-colors"
