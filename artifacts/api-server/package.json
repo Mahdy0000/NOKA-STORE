@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node --import tsx --watch src/index.ts",
     "build": "node ./build.mjs",
-    "build:vercel": "esbuild src/api-entry.ts --bundle --platform=node --format=esm --outfile=dist/api-entry.mjs --external:./node_modules/*",
+    "build:vercel": "esbuild src/api-entry.ts --bundle --platform=node --format=esm --outfile=dist/api-entry.mjs --external:cookie-parser --external:cors --external:drizzle-orm --external:drizzle-zod --external:express --external:multer --external:pino --external:pino-http --external:zod --external:@libsql/client --external:sql.js",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "db:push": "drizzle-kit push --config ../../lib/db/drizzle.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
