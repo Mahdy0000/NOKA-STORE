@@ -878,10 +878,10 @@ export default function Admin() {
                         try {
                           if (row.id) {
                             const r = await fetch(`/api/delivery-zones/${row.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fee }) });
-                            if (!r.ok) throw new Error("Save failed");
+                            if (!r.ok) { const e = await r.text(); throw new Error(e); }
                           } else {
                             const r = await fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: row.name, fee }) });
-                            if (!r.ok) throw new Error("Create failed");
+                            if (!r.ok) { const e = await r.text(); throw new Error(e); }
                             row.id = (await r.json()).id;
                           }
                           setDeliveryFeeInputs((p) => { const n = { ...p }; delete n[row.name]; return n; });
@@ -889,7 +889,8 @@ export default function Admin() {
                           setSavedFee(row.name);
                           setTimeout(() => setSavedFee(null), 2000);
                         } catch (err) {
-                          alert("Failed to save delivery fee");
+                          console.error(err);
+                          alert("Failed: " + (err instanceof Error ? err.message : "Unknown"));
                         } finally { setSavingFee(null); }
                       }}
                       className="px-3 py-1.5 rounded-full text-xs font-semibold disabled:opacity-50 transition-colors"
