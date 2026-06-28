@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { deliveryZonesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import {
   CreateDeliveryZoneBody,
   UpdateDeliveryZoneBody,
@@ -28,7 +29,11 @@ router.post("/delivery-zones", async (req, res) => {
     res.status(201).json({ id: zone.id, name: zone.name, fee: Number(zone.fee) });
   } catch (err) {
     req.log.error({ err }, "Failed to create delivery zone");
-    res.status(400).json({ error: "Invalid request" });
+    if (err instanceof z.ZodError) {
+      res.status(400).json({ error: "Invalid request", details: err.errors });
+    } else {
+      res.status(500).json({ error: "Server error" });
+    }
   }
 });
 
@@ -44,7 +49,11 @@ router.put("/delivery-zones/:id", async (req, res) => {
     res.json({ id: zone.id, name: zone.name, fee: Number(zone.fee) });
   } catch (err) {
     req.log.error({ err }, "Failed to update delivery zone");
-    res.status(400).json({ error: "Invalid request" });
+    if (err instanceof z.ZodError) {
+      res.status(400).json({ error: "Invalid request", details: err.errors });
+    } else {
+      res.status(500).json({ error: "Server error" });
+    }
   }
 });
 

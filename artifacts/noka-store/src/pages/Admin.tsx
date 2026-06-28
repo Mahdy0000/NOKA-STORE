@@ -875,9 +875,13 @@ export default function Admin() {
                       onClick={async () => {
                         setSavingFee(row.name);
                         const fee = Number(deliveryFeeInputs[row.name]) / 50;
+                        const payload = { name: row.name, fee };
+                        console.log("saving delivery zone:", JSON.stringify(payload));
                         try {
+                          if (isNaN(fee) || fee < 0) { alert("Enter a valid number"); setSavingFee(null); return; }
+                          console.log("saving", row.name, fee);
                           if (row.id) {
-                            const r = await fetch(`/api/delivery-zones/${row.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fee }) });
+                            const r = await fetch(`/api/delivery-zones/${row.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
                             if (!r.ok) { const e = await r.text(); throw new Error(e); }
                           } else {
                             const r = await fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: row.name, fee }) });
