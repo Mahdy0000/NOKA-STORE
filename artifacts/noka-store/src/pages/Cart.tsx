@@ -14,7 +14,6 @@ export default function Cart() {
   const queryClient = useQueryClient();
   const { data: cart, isLoading } = useGetCart({ session_id: sessionId });
   const updateItem = useUpdateCartItem();
-  const removeItem = useRemoveCartItem();
 
   function invalidateCart() {
     queryClient.invalidateQueries({ queryKey: getGetCartQueryKey({ session_id: sessionId }) });
