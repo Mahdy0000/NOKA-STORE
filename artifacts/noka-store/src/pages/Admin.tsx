@@ -105,19 +105,14 @@ export default function Admin() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Delivery zones state
-  const { data: deliveryZones = [], refetch: refetchDeliveryZones, isFetched: deliveryFetched } = useListDeliveryZones();
-  const [deliveryFeeInputs, setDeliveryFeeInputs] = useState<Record<number, string>>({});
-  const [savingFee, setSavingFee] = useState<number | null>(null);
-
-  // Auto-create missing governorates on mount
-  useEffect(() => {
-    if (!deliveryFetched) return;
-    const existing = new Set(deliveryZones.map((z) => z.name));
-    const missing = GOVERNORATES.filter((g) => !existing.has(g));
-    if (!missing.length) return;
-    Promise.all(missing.map((name) => fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, fee: 0 }) })))
-      .then(() => refetchDeliveryZones());
-  }, [deliveryFetched]);
+  const { data: deliveryZones = [], refetch: refetchDeliveryZones } = useListDeliveryZones();
+  const [deliveryFeeInputs, setDeliveryFeeInputs] = useState<Record<string, string>>({});
+  const [savingFee, setSavingFee] = useState<string | null>(null);
+  const zoneMap = new Map(deliveryZones.map((z) => [z.name, z]));
+  const deliveryRows = GOVERNORATES.map((name) => {
+    const zone = zoneMap.get(name);
+    return { name, id: zone?.id, fee: zone?.fee ?? 0 };
+  });
 
   async function fetchSizes() {
     try {
@@ -378,7 +373,7 @@ export default function Admin() {
               {t === "products" ? <Package className="w-4 h-4" /> : t === "categories" ? <Tags className="w-4 h-4" /> : t === "sizes" ? <Ruler className="w-4 h-4" /> : t === "delivery" ? <Truck className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
               {t}
               <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full font-normal">
-                {t === "products" ? products.length : t === "categories" ? categories.length : t === "sizes" ? allSizes.length : t === "delivery" ? deliveryZones.length : orders.length}
+                {t === "products" ? products.length : t === "categories" ? categories.length : t === "sizes" ? allSizes.length : t === "delivery" ? deliveryRows.length : orders.length}
               </span>
             </button>
           ))}
@@ -853,34 +848,39 @@ export default function Admin() {
               <h2 className="text-lg font-semibold font-serif">Delivery Fees by Governorate</h2>
             </div>
             <div className="space-y-2">
-              {deliveryZones.sort((a, b) => a.name.localeCompare(b.name)).map((z) => (
-                <div key={z.id} className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
+              {deliveryRows.map((row) => (
+                <div key={row.name} className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm">{z.name}</p>
+                    <p className="font-medium text-foreground text-sm">{row.name}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <div className="relative">
                       <input
                         type="number" min="0"
-                        value={deliveryFeeInputs[z.id] ?? String(z.fee * 50)}
-                        onChange={(e) => setDeliveryFeeInputs((p) => ({ ...p, [z.id]: e.target.value }))}
+                        value={deliveryFeeInputs[row.name] ?? String(row.fee * 50)}
+                        onChange={(e) => setDeliveryFeeInputs((p) => ({ ...p, [row.name]: e.target.value }))}
                         className="w-24 border border-border rounded-lg px-3 py-1.5 text-sm bg-background text-right focus:outline-none focus:ring-2 focus:ring-primary/30"
                       />
                       <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">EGP</span>
                     </div>
                     <button
-                      disabled={savingFee === z.id}
+                      disabled={savingFee === row.name}
                       onClick={async () => {
-                        setSavingFee(z.id);
+                        setSavingFee(row.name);
+                        const fee = Number(deliveryFeeInputs[row.name] ?? row.fee * 50) / 50;
                         try {
-                          await fetch(`/api/delivery-zones/${z.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fee: Number(deliveryFeeInputs[z.id] ?? z.fee * 50) / 50 }) });
-                          setDeliveryFeeInputs((p) => { const n = { ...p }; delete n[z.id]; return n; });
+                          if (row.id) {
+                            await fetch(`/api/delivery-zones/${row.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fee }) });
+                          } else {
+                            await fetch("/api/delivery-zones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: row.name, fee }) });
+                          }
+                          setDeliveryFeeInputs((p) => { const n = { ...p }; delete n[row.name]; return n; });
                           refetchDeliveryZones();
                         } catch {} finally { setSavingFee(null); }
                       }}
                       className="px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-semibold disabled:opacity-50"
                     >
-                      {savingFee === z.id ? "Saving..." : "Save"}
+                      {savingFee === row.name ? "Saving..." : "Save"}
                     </button>
                   </div>
                 </div>
